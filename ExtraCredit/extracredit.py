@@ -102,7 +102,30 @@ def game_over_text():
     restart = restart_font.render("Press R to Restart", True, (255, 255, 255))
     screen.blit(restart, (250, 320))
 
+def show_title_screen():
+    title_font = pygame.font.Font('freesansbold.ttf', 64)
+    subtitle_font = pygame.font.Font('freesansbold.ttf', 32)
+
+    title_text = title_font.render("SPACE INVADERS", True, (255, 255, 255))
+    subtitle_text = subtitle_font.render("Press any key to start", True, (200, 200, 200))
+
+    screen.fill((0, 0, 0))
+    screen.blit(title_text, (180, 200))
+    screen.blit(subtitle_text, (230, 300))
+    pygame.display.update()
+
+    # Wait for any key to be pressed
+    waiting = True
+    while waiting:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                exit()
+            if event.type == pygame.KEYDOWN:
+                waiting = False
+
 # Game loop
+show_title_screen()
 running = True
 game_over = False
 last_spawn_time = time.time()
