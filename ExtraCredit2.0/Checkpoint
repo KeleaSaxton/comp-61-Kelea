@@ -1,0 +1,13 @@
+Demo Video: https://youtu.be/VxMdnnF5xTQ
+Setup: Ensure that you have Python installed and pygame installed as well. It is also important that the additional files such as the images and sound files are all downloaded in the same folder as the raw code. 
+
+Game Overview
+Game Title: Color Catchers
+Game Summary: Color Catchers is suited for all ages. The game can last as long as the player desires with a restart button and the high score included within the game. This game is very similar to most arcade games where the user has control over a paddle and attempts to catch colored shapes as they fall down the screen. Red circles increase your score while blue circles decrease the life of the player. As the game progresses the game increases in difficulty and the shapes start falling faster. The importance of increasing the difficuly is so the player does not get bored and the game can become more challening. 
+Core Gameplay Loop: 
+
+Gameplay Mechanics
+Controls: Input schemes for keyboard, gamepad, or touchscreen.
+Core Mechanics: Jumping, shooting, crafting, dialogue, etc.
+Level Progression: How the player advances (levels, chapters, zones).
+Win/Loss Conditions: What determines success or failure?
