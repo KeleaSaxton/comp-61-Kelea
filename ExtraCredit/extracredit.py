@@ -51,7 +51,7 @@ enemyY = []
 enemyX_change = []
 enemyY_change = []
 num_of_enemies = 6
-enemy_speed = 4
+enemy_speed = 2
 MAX_ENEMIES = 20
 
 def spawn_enemies(num):
