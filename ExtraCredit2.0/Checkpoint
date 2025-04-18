@@ -4,10 +4,10 @@ Setup: Ensure that you have Python installed and pygame installed as well. It is
 Game Overview
 Game Title: Color Catchers
 Game Summary: Color Catchers is suited for all ages. The game can last as long as the player desires with a restart button and the high score included within the game. This game is very similar to most arcade games where the user has control over a paddle and attempts to catch colored shapes as they fall down the screen. Red circles increase your score while blue circles decrease the life of the player. As the game progresses the game increases in difficulty and the shapes start falling faster. The importance of increasing the difficuly is so the player does not get bored and the game can become more challening. 
-Core Gameplay Loop: 
+Core Gameplay Loop: The player can move right and left using the arrow keys in order to catch the red falling shapes. When a player catches a red shape, a "catch" sound is triggered and the score increases by one. The "miss" sound and minus one point occurs when the player catches a blue shape. The missed shapes disappear after falling off the screen. The frequency of the shapes increases and the speed at which the shapes fall also increases the longer the player is successfully playing the game. The game is  restarted after the player fails and the player then has the chance to beat their high score. 
 
 Gameplay Mechanics
-Controls: Input schemes for keyboard, gamepad, or touchscreen.
-Core Mechanics: Jumping, shooting, crafting, dialogue, etc.
-Level Progression: How the player advances (levels, chapters, zones).
-Win/Loss Conditions: What determines success or failure?
+Controls: The left arrow moves the paddle left. The right arrow moves the paddle right. Using the mouse click restarts the game and shows the "Game Over" screen. 
+Core Mechanics: The colored shapes are randomly genearted between blue or red. One core mechanism is the importance of the paddle catching the shape before the color falls off the screen. The sounds and score encourage the player to continue playing the game.   
+Level Progression: The levels within this game are not traditional. Instead the game advances as time increases. The shape speed increases every 10 seconds and the frequency of the shapes also increases gradually. A high score system emphasizes the perforamnce measure within the game.    
+Win/Loss Conditions: There is no fixed win condition, instead the goal is to beat the previous players high score. The game is considered over when the player's lives drop to 0 or when the timer reaches 5 minutes. No matter how the game ends, a "Game Over" screen is shown and the option to restart is provided to the player.  
