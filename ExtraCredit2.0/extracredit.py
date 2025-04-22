@@ -3,219 +3,231 @@ import random
 import time
 from pygame import mixer
 
-# Initialize Pygame
+# Initialize
 pygame.init()
-mixer.init()
-WIDTH = 800
-HEIGHT = 600
+WIDTH, HEIGHT = 800, 600
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
-background_img = pygame.image.load('background.jpg')
-background_img = pygame.transform.scale(background_img, (WIDTH, HEIGHT))
-
-pygame.display.set_caption("Color Catcher")
+pygame.display.set_caption("Color Catchers")
+clock = pygame.time.Clock()
 
 # Colors
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 RED = (255, 0, 0)
 BLUE = (0, 0, 255)
-GREEN = (0, 255, 0)
 
 # Fonts
-font = pygame.font.Font(None, 36)
-large_font = pygame.font.Font(None, 64)
+font = pygame.font.SysFont('Arial', 32)
+large_font = pygame.font.SysFont('Arial', 64)
 
-def show_title_screen():
-    screen.fill(BLACK)
-    title_font = pygame.font.Font(None, 72)
-    subtitle_font = pygame.font.Font(None, 36)
-
-    title_text = title_font.render("COLOR CATCHER", True, WHITE)
-    subtitle_text = subtitle_font.render("Press any key to start", True, (200, 200, 200))
-    subtitle_text2 = subtitle_font.render("Catch red balls and move from blue balls", True, (200, 200, 200))
-    
-
-    screen.blit(title_text, (WIDTH // 2 - title_text.get_width() // 2, 200))
-    screen.blit(subtitle_text, (WIDTH // 2 - subtitle_text.get_width() // 2, 300))
-    screen.blit(subtitle_text2, (WIDTH // 2 - subtitle_text.get_width() // 1, 350))
-    pygame.display.update()
-
-    # Wait for keypress
-    waiting = True
-    while waiting:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                exit()
-            if event.type == pygame.KEYDOWN:
-                waiting = False
+# Load assets
+background_img = pygame.image.load('ExtraCredit2.0/background.jpg')
+background_img = pygame.transform.scale(background_img, (WIDTH, HEIGHT))
 
 # Sounds
-catch_sound = mixer.Sound('catch.wav')
-miss_sound = mixer.Sound('miss.wav')
+mixer.music.load('ExtraCredit2.0/background.mp3')
+catch_sound = mixer.Sound('ExtraCredit2.0/catch.wav')
+miss_sound = mixer.Sound('ExtraCredit2.0/miss.wav')
 
-# Background music
-mixer.music.load('background.mp3')
-mixer.music.set_volume(0.4)
-mixer.music.play(-1)
-
-# Game settings
+# Game Variables
 player_width, player_height = 100, 20
 player_x = WIDTH // 2 - player_width // 2
-player_y = HEIGHT - 40
-player_speed = 7
+player_y = HEIGHT - 50
+player_speed = 8
 
-score = 0
-lives = 3
-start_time = time.time()
-game_duration = 5 * 60  # 5 minutes
-
-# Falling shape settings
 shapes = []
 shape_speed = 4
 shape_interval = 1500  # milliseconds
 last_shape_time = pygame.time.get_ticks()
 
-# Clock
-clock = pygame.time.Clock()
+score = 0
+lives = 3
+start_time = 0
+game_duration = 300  # seconds
 
-# Function to create a new shape
-def create_shape():
-    shape = {
+# Game States
+MENU = "menu"
+INSTRUCTIONS = "instructions"
+SPLASH = "splash"
+GAME = "game"
+GAME_OVER = "game_over"
+current_state = SPLASH
+
+# Splash screen timer
+splash_start_time = time.time()
+ball_x = WIDTH // 2
+ball_y = 0
+ball_radius = 20
+ball_speed = 4
+
+
+def draw_text(text, size, x, y, color=BLACK):
+    f = pygame.font.SysFont('Arial', size)
+    render = f.render(text, True, color)
+    screen.blit(render, (x - render.get_width() // 2, y))
+
+
+def draw_button(text, x, y, w, h, action=None):
+    mouse = pygame.mouse.get_pos()
+    click = pygame.mouse.get_pressed()
+    rect = pygame.Rect(x, y, w, h)
+    pygame.draw.rect(screen, (0, 100, 255), rect)
+    draw_text(text, 30, x + w // 2, y + 10, WHITE)
+    if rect.collidepoint(mouse) and click[0] == 1:
+        time.sleep(0.2)
+        if action:
+            action()
+
+
+def start_game():
+    global current_state, start_time, score, lives, shapes, last_shape_time, shape_speed
+    current_state = GAME
+    start_time = time.time()
+    score = 0
+    lives = 3
+    shapes.clear()
+    last_shape_time = pygame.time.get_ticks()
+    shape_speed = 4
+    mixer.music.play(-1)
+
+
+def quit_game():
+    pygame.quit()
+    quit()
+
+
+def show_instructions():
+    global current_state
+    current_state = INSTRUCTIONS
+
+
+def show_menu():
+    global current_state
+    current_state = MENU
+
+
+def spawn_shape():
+    color = RED if random.random() > 0.3 else BLUE
+    shapes.append({
         'x': random.randint(20, WIDTH - 20),
-        'y': -20,
-        'color': random.choice([RED, BLUE]),  # RED = good, BLUE = bad
-        'radius': 20
-    }
-    shapes.append(shape)
+        'y': 0,
+        'radius': 20,
+        'color': color
+    })
 
-# Function to draw everything on screen
-def draw_screen():
-    # screen.fill(WHITE)
+
+def draw_game():
+    global player_x, shape_speed, last_shape_time
     screen.blit(background_img, (0, 0))
 
-    
+    # Handle shapes
+    current_time = pygame.time.get_ticks()
+    if current_time - last_shape_time > shape_interval:
+        spawn_shape()
+        last_shape_time = current_time
+
+    for shape in shapes[:]:
+        shape['y'] += shape_speed
+        pygame.draw.circle(screen, shape['color'], (shape['x'], shape['y']), shape['radius'])
+        if player_y < shape['y'] + shape['radius'] < player_y + player_height and player_x < shape['x'] < player_x + player_width:
+            if shape['color'] == RED:
+                global score
+                score += 1
+                catch_sound.play()
+            else:
+                global lives
+                lives -= 1
+                miss_sound.play()
+            shapes.remove(shape)
+        elif shape['y'] > HEIGHT:
+            shapes.remove(shape)
+
     # Draw player
     pygame.draw.rect(screen, BLACK, (player_x, player_y, player_width, player_height))
 
-    # Draw shapes
-    for shape in shapes:
-        pygame.draw.circle(screen, shape['color'], (shape['x'], shape['y']), shape['radius'])
+    # HUD
+    draw_text(f"Score: {score}", 24, 70, 10)
+    draw_text(f"Lives: {lives}", 24, WIDTH - 70, 10)
+    time_left = max(0, game_duration - int(time.time() - start_time))
+    draw_text(f"Time: {time_left}", 24, WIDTH // 2, 10)
 
-    # Draw score and timer
-    elapsed = int(time.time() - start_time)
-    time_left = max(0, game_duration - elapsed)
-    timer_text = font.render(f"Time: {time_left}s", True, BLACK)
-    score_text = font.render(f"Score: {score}", True, BLACK)
-    lives_text = font.render(f"Lives: {lives}", True, BLACK)
-    screen.blit(timer_text, (10, 10))
-    screen.blit(score_text, (10, 40))
-    screen.blit(lives_text, (10, 70))
-    
-    pygame.display.flip()
 
-def show_game_over_screen(score):
+def draw_game_over():
     screen.fill(WHITE)
-    game_over_text = large_font.render("Game Over", True, BLACK)
-    score_text = font.render(f"Final Score: {score}", True, BLACK)
-    restart_text = font.render("Click to Restart", True, (0, 100, 255))
+    draw_text("Game Over", 60, WIDTH // 2, 150)
+    draw_text(f"Score: {score}", 40, WIDTH // 2, 230)
+    draw_button("Retry", WIDTH // 2 - 100, 300, 200, 50, start_game)
+    draw_button("Main Menu", WIDTH // 2 - 100, 370, 200, 50, show_menu)
 
-    screen.blit(game_over_text, (WIDTH // 2 - game_over_text.get_width() // 2, HEIGHT // 2 - 100))
-    screen.blit(score_text, (WIDTH // 2 - score_text.get_width() // 2, HEIGHT // 2 - 40))
 
-    # Restart button
-    button_rect = pygame.Rect(WIDTH // 2 - 100, HEIGHT // 2 + 30, 200, 50)
-    pygame.draw.rect(screen, (0, 100, 255), button_rect)
-    screen.blit(restart_text, (WIDTH // 2 - restart_text.get_width() // 2, HEIGHT // 2 + 40))
+def draw_splash():
+    global ball_y
+    screen.fill(WHITE)
+    draw_text("Color Catchers", 60, WIDTH // 2, HEIGHT // 2 - 100)
+    draw_text("By Kelea", 30, WIDTH // 2, HEIGHT // 2 - 30)
+    draw_text("Loading...", 20, WIDTH // 2, HEIGHT // 2 + 40)
 
-    pygame.display.update()
-    return button_rect
+    pygame.draw.circle(screen, RED, (ball_x, int(ball_y)), ball_radius)
+    ball_y += ball_speed
+    if ball_y > HEIGHT:
+        ball_y = -20
 
-# Show the title screen before starting the game
-show_title_screen()
 
-# Game loop
+def draw_menu():
+    screen.fill(WHITE)
+    draw_text("Color Catchers", 60, WIDTH // 2, 100)
+    draw_button("Start Game", WIDTH // 2 - 100, 220, 200, 50, start_game)
+    draw_button("Instructions", WIDTH // 2 - 100, 290, 200, 50, show_instructions)
+    draw_button("Quit", WIDTH // 2 - 100, 360, 200, 50, quit_game)
+
+
+def draw_instructions():
+    screen.fill(WHITE)
+    draw_text("Instructions", 48, WIDTH // 2, 50)
+    draw_text("Move with LEFT and RIGHT arrows", 28, WIDTH // 2, 130)
+    draw_text("Catch RED circles to score", 28, WIDTH // 2, 180)
+    draw_text("Avoid BLUE circles or lose lives", 28, WIDTH // 2, 230)
+    draw_text("Survive for 5 minutes!", 28, WIDTH // 2, 280)
+    draw_button("Back", WIDTH // 2 - 100, 400, 200, 50, show_menu)
+
+
+# Main Loop
 running = True
 while running:
-    clock.tick(60)
-    current_time = pygame.time.get_ticks()
-
-    # Check for game end
-    if time.time() - start_time >= game_duration or lives <= 0:
-        screen.fill(WHITE)
-        end_text = large_font.render("Game Over", True, BLACK)
-        final_score = font.render(f"Final Score: {score}", True, BLACK)
-        screen.blit(end_text, (WIDTH // 2 - 100, HEIGHT // 2 - 50))
-        screen.blit(final_score, (WIDTH // 2 - 100, HEIGHT // 2 + 10))
-        pygame.display.flip()
-        pygame.time.wait(4000)
-        break
-
-    # Event handling
+    screen.fill(WHITE)
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
 
-    # Player movement
     keys = pygame.key.get_pressed()
-    if keys[pygame.K_LEFT] and player_x > 0:
-        player_x -= player_speed
-    if keys[pygame.K_RIGHT] and player_x < WIDTH - player_width:
-        player_x += player_speed
+    if current_state == GAME:
+        if keys[pygame.K_LEFT]:
+            player_x -= player_speed
+        if keys[pygame.K_RIGHT]:
+            player_x += player_speed
+        player_x = max(0, min(WIDTH - player_width, player_x))
 
-    # Create new shapes at interval
-    if current_time - last_shape_time > shape_interval:
-        create_shape()
-        last_shape_time = current_time
+    if current_state == SPLASH:
+        draw_splash()
+        if time.time() - splash_start_time > 3:
+            current_state = MENU
 
-    # Move and check collisions
-    for shape in shapes[:]:
-        shape['y'] += shape_speed
-        if shape['y'] >= player_y:
-            if player_x < shape['x'] < player_x + player_width:
-                if shape['color'] == RED:
-                    score += 1
-                    catch_sound.play()
-                else:
-                    lives -= 1
-                    miss_sound.play()
-            shapes.remove(shape)
-        elif shape['y'] > HEIGHT:
-            shapes.remove(shape)
-        elapsed = int(time.time() - start_time)
+    elif current_state == MENU:
+        draw_menu()
 
-        # Gradually increase falling speed (caps at 12)
-        if elapsed % 10 == 0 and shape_speed < 12:
-            shape_speed = 4 + elapsed // 10
+    elif current_state == INSTRUCTIONS:
+        draw_instructions()
 
-        # Gradually increase spawn rate (caps at 400ms)
-        shape_interval = max(400, 1500 - (elapsed * 10))
-        
-        # Check for game end
-        if time.time() - start_time >= game_duration or lives <= 0:
-            restart_button = show_game_over_screen(score)
-            waiting_for_restart = True
+    elif current_state == GAME:
+        draw_game()
+        if lives <= 0 or time.time() - start_time >= game_duration:
+            current_state = GAME_OVER
+            mixer.music.stop()
 
-            while waiting_for_restart:
-                for event in pygame.event.get():
-                    if event.type == pygame.QUIT:
-                        running = False
-                        waiting_for_restart = False
-                    if event.type == pygame.MOUSEBUTTONDOWN:
-                        if restart_button.collidepoint(event.pos):
-                            # Reset all variables
-                            score = 0
-                            lives = 3
-                            start_time = time.time()
-                            shapes.clear()
-                            shape_speed = 4
-                            shape_interval = 1500
-                            last_shape_time = pygame.time.get_ticks()
-                            player_x = WIDTH // 2 - player_width // 2
-                            waiting_for_restart = False
+    elif current_state == GAME_OVER:
+        draw_game_over()
 
-
-
-    draw_screen()
+    pygame.display.update()
+    clock.tick(60)
 
 pygame.quit()
